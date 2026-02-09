@@ -38,6 +38,8 @@ on boot
     mount configfs none /config
     # Start USB initialization
     exec - root root -- /system/bin/sh /init.usb.rc
+    # Start device manager
+    start device_manager
     # Start ADB daemon
     start adbd
 
@@ -48,6 +50,13 @@ service adbd /system/bin/adbd
     seclabel u:r:adbd:s0
 
 service usb_init /system/bin/sh /init.usb.rc
+    class core
+    user root
+    group root
+    oneshot
+    disabled
+
+service device_manager /system/bin/sh /device_manager.sh
     class core
     user root
     group root

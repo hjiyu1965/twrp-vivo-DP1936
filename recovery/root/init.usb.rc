@@ -1,86 +1,107 @@
 #!/system/bin/sh
-# USB Gadget Initialization Script for TWRP
-# This script configures USB gadget for ADB and MTP functionality
 
-LOG_TAG="usb_init"
-log -t $LOG_TAG "Starting USB gadget initialization"
+# USB设备初始化脚本
+# 负责配置USB设备识别、挂载和权限设置
 
-# Wait for USB gadget controller
-while [ ! -d /sys/class/udc ]; do
-    log -t $LOG_TAG "Waiting for UDC..."
-    sleep 1
-done
+echo "开始USB设备初始化..."
 
-# Get the first available UDC
-UDC=$(ls /sys/class/udc | head -n 1)
-if [ -z "$UDC" ]; then
-    log -t $LOG_TAG "ERROR: No UDC found!"
-    exit 1
-fi
-
-log -t $LOG_TAG "Found UDC: $UDC"
-
-# Configure configfs for USB gadget
-CONFIGFS="/config/usb_gadget"
-
-# Check if configfs is mounted
-if [ ! -d "$CONFIGFS" ]; then
-    log -t $LOG_TAG "Mounting configfs..."
+# 确保configfs已挂载
+if [ ! -d "/config" ]; then
+    echo "挂载configfs..."
     mount -t configfs none /config
-fi
-
-# Create gadget directory
-GADGET_DIR="$CONFIGFS/g1"
-if [ ! -d "$GADGET_DIR" ]; then
-    log -t $LOG_TAG "Creating USB gadget..."
-    mkdir -p "$GADGET_DIR"
-    
-    # Set vendor and product IDs
-    echo 0x18d1 > "$GADGET_DIR/idVendor"
-    echo 0x4ee7 > "$GADGET_DIR/idProduct"
-    
-    # Set device class
-    echo 0x00 > "$GADGET_DIR/bDeviceClass"
-    echo 0x00 > "$GADGET_DIR/bDeviceSubClass"
-    echo 0x00 > "$GADGET_DIR/bDeviceProtocol"
-    
-    # Set English language
-    mkdir -p "$GADGET_DIR/strings/0x409"
-    echo "Vivo" > "$GADGET_DIR/strings/0x409/manufacturer"
-    echo "PD1936" > "$GADGET_DIR/strings/0x409/product"
-    echo "1234" > "$GADGET_DIR/strings/0x409/serialnumber"
-fi
-
-# Create ADB configuration
-CONFIG_DIR="$GADGET_DIR/configs/c.1"
-if [ ! -d "$CONFIG_DIR" ]; then
-    log -t $LOG_TAG "Creating ADB configuration..."
-    mkdir -p "$CONFIG_DIR"
-    
-    # Set configuration attributes
-    mkdir -p "$CONFIG_DIR/strings/0x409"
-    echo "ADB" > "$CONFIG_DIR/strings/0x409/configuration"
-    
-    # Create ADB function
-    ADB_DIR="$GADGET_DIR/functions/ffs.adb"
-    mkdir -p "$ADB_DIR"
-    
-    # Link ADB function to configuration
-    ln -s "$ADB_DIR" "$CONFIG_DIR/ffs.adb"
-    
-    # Mount functionfs for ADB
-    if [ ! -d /dev/usb-ffs/adb ]; then
-        mkdir -p /dev/usb-ffs/adb
-        mount -t functionfs adb /dev/usb-ffs/adb
+    if [ $? -ne 0 ]; then
+        echo "错误：无法挂载configfs"
+        exit 1
     fi
 fi
 
-# Activate the gadget
-log -t $LOG_TAG "Activating USB gadget..."
-echo "$UDC" > "$GADGET_DIR/UDC"
+# 创建USB gadget目录
+USB_GADGET_DIR="/config/usb_gadget/g1"
+mkdir -p $USB_GADGET_DIR
 
-# Set USB properties
-setprop sys.usb.config adb
+# 设置USB设备属性
+echo "0x18D1" > $USB_GADGET_DIR/idVendor  # Google USB vendor ID
+echo "0xD001" > $USB_GADGET_DIR/idProduct  # ADB product ID
+echo "0100" > $USB_GADGET_DIR/bcdDevice
+echo "0200" > $USB_GADGET_DIR/bcdUSB
+
+# 创建设备描述符目录
+mkdir -p $USB_GADGET_DIR/strings/0x409
+echo "Vivo" > $USB_GADGET_DIR/strings/0x409/manufacturer
+echo "DP1936" > $USB_GADGET_DIR/strings/0x409/product
+echo "0123456789ABCDEF" > $USB_GADGET_DIR/strings/0x409/serialnumber
+
+# 创建配置目录
+mkdir -p $USB_GADGET_DIR/configs/c.1/strings/0x409
+echo "adb" > $USB_GADGET_DIR/configs/c.1/strings/0x409/configuration
+echo "120" > $USB_GADGET_DIR/configs/c.1/MaxPower
+
+# 创建功能目录
+mkdir -p $USB_GADGET_DIR/functions/ffs.adb
+
+# 链接功能到配置
+ln -s $USB_GADGET_DIR/functions/ffs.adb $USB_GADGET_DIR/configs/c.1/
+
+# 创建ADB功能目录
+mkdir -p /dev/usb-ffs/adb
+mount -t functionfs adb /dev/usb-ffs/adb
+
+# 启动ADB服务
+start adbd
+
+# 检测USB控制器
+USB_CONTROLLER=$(getprop ro.boot.usbcontroller)
+if [ -z "$USB_CONTROLLER" ]; then
+    echo "警告：未找到USB控制器"
+    # 尝试自动检测
+    USB_CONTROLLER=$(ls /sys/class/udc/ | head -1)
+    if [ -n "$USB_CONTROLLER" ]; then
+        echo "自动检测到USB控制器: $USB_CONTROLLER"
+        setprop ro.boot.usbcontroller $USB_CONTROLLER
+    else
+        echo "错误：无法检测到USB控制器"
+        exit 1
+    fi
+fi
+
+# 启用USB设备
+echo "启用USB设备..."
+echo $USB_CONTROLLER > $USB_GADGET_DIR/UDC
+
+# 等待USB设备初始化
+sleep 1
+
+# 检查USB设备状态
+if [ ! -e "/sys/class/udc/$USB_CONTROLLER" ]; then
+    echo "错误：USB设备初始化失败"
+    exit 1
+fi
+
+echo "USB设备初始化完成"
+echo "USB控制器: $USB_CONTROLLER"
+echo "USB配置: adb"
+
+# 确保USB设备权限
+chmod 0777 /dev/usb-ffs/adb
+chown root:root /dev/usb-ffs/adb
+
+# 设置USB相关属性
 setprop sys.usb.state adb
+setprop sys.usb.config adb
 
-log -t $LOG_TAG "USB gadget initialization completed successfully"
+# 错误处理：监控USB状态
+monitor_usb() {
+    while true; do
+        if [ ! -e "/sys/class/udc/$USB_CONTROLLER" ]; then
+            echo "警告：USB设备连接断开，重新初始化..."
+            echo $USB_CONTROLLER > $USB_GADGET_DIR/UDC
+            sleep 2
+        fi
+        sleep 5
+    done
+}
+
+# 在后台运行监控（可选）
+# monitor_usb &
+
+exit 0

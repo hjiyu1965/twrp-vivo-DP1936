@@ -123,7 +123,3 @@ TW_IGNORE_MT_POSITION_0 := true
 TW_BRIGHTNESS_PATH := /sys/class/backlight/panel0-backlight/brightness
 TW_MAX_BRIGHTNESS := 4095
 TW_DEFAULT_BRIGHTNESS := 200
-
-# Kernel modules to load (Wi-Fi)
-TARGET_KERNEL_MODULES += \
-    $(DEVICE_PATH)/proprietary/vendor/bin/qca_cld3_wlan.ko

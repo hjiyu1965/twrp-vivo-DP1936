@@ -77,6 +77,7 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/recovery/root/init.recovery.svc.rc:$(TARGET_RECOVERY_ROOT_OUT)/init.recovery.svc.rc \
     $(LOCAL_PATH)/recovery/root/init.recovery.wifi.rc:$(TARGET_RECOVERY_ROOT_OUT)/init.recovery.wifi.rc \
     $(LOCAL_PATH)/recovery/root/init.usb.rc:$(TARGET_RECOVERY_ROOT_OUT)/init.usb.rc \
+    $(LOCAL_PATH)/recovery/root/device_manager.sh:$(TARGET_RECOVERY_ROOT_OUT)/device_manager.sh \
     $(LOCAL_PATH)/recovery/root/usb_test.sh:$(TARGET_RECOVERY_ROOT_OUT)/usb_test.sh \
     $(LOCAL_PATH)/recovery/root/touch_test.sh:$(TARGET_RECOVERY_ROOT_OUT)/touch_test.sh
 
