@@ -56,10 +56,16 @@ TARGET_FORCE_PREBUILT_KERNEL := true
 ifeq ($(TARGET_FORCE_PREBUILT_KERNEL),true)
 TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
 TARGET_PREBUILT_DTB := $(DEVICE_PATH)/prebuilt/dtb.img
-BOARD_MKBOOTIMG_ARGS += --dtb $(TARGET_PREBUILT_DTB)
-BOARD_INCLUDE_DTB_IN_BOOTIMG := 
 BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
-BOARD_KERNEL_SEPARATED_DTBO := 
+
+# 确保 DTBO 正确包含到恢复镜像中
+BOARD_MKBOOTIMG_ARGS += --dtb $(TARGET_PREBUILT_DTB)
+BOARD_MKBOOTIMG_ARGS += --dtbo $(BOARD_PREBUILT_DTBOIMAGE)
+
+# 保留 DTBO 分离设置，确保 TWRP 构建系统正确处理
+BOARD_INCLUDE_DTB_IN_BOOTIMG := true
+BOARD_KERNEL_SEPARATED_DTBO := true
+BOARD_INCLUDE_RECOVERY_DTBO := true
 endif
 
 # Partitions
@@ -104,3 +110,25 @@ TW_EXTRA_LANGUAGES := true
 TW_SCREEN_BLANK_ON_BOOT := true
 TW_INPUT_BLACKLIST := "hbtp_vm"
 TW_USE_TOOLBOX := true
+
+# USB Configuration
+TW_EXCLUDE_DEFAULT_USB_INIT := true
+TW_HAS_USB_STORAGE := true
+TW_INCLUDE_NTFS_3G := true
+TW_MTP_DEVICE := /dev/mtp_usb
+TW_NO_USB_STORAGE := false
+TW_USB_STORAGE := true
+
+# Touchscreen calibration
+TW_CALIBRATE_TOUCH := true
+TW_IGNORE_MAJOR_AXIS_0 := true
+TW_IGNORE_MT_POSITION_0 := true
+
+# Brightness control
+TW_BRIGHTNESS_PATH := /sys/class/backlight/panel0-backlight/brightness
+TW_MAX_BRIGHTNESS := 4095
+TW_DEFAULT_BRIGHTNESS := 200
+
+# Kernel modules to load (Wi-Fi)
+TARGET_KERNEL_MODULES += \
+    $(DEVICE_PATH)/proprietary/vendor/bin/qca_cld3_wlan.ko

@@ -158,6 +158,6 @@ on boot
 service touchupdate /system/bin/vts_app_recovery --update
 	class core
 	user system
-	disabled
-	seclabel u:r:vts_app:s0
-	oneshot
+    enabled
+    seclabel u:r:recovery:s0
+    oneshot

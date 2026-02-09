@@ -331,6 +331,11 @@ firmware_directories /vendor/firmware_mnt/image/
 /sys/class/fts/touch_aoi aoi_set 0660 root system
 /sys/class/fts/touch_aoi power_set 0660 root system
 
+# Touchscreen devices (critical for touch functionality)
+/dev/v4l-touch*           0660   root       input
+/dev/gtp_tools            0660   system     system
+/dev/input/*              0660   root       input
+
 #ImproveTouch device
 /dev/hbtp_input           0660   system     system
 /dev/hbtp_vm              0660   system     system
