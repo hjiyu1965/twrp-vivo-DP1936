@@ -105,21 +105,13 @@ TW_SCREEN_BLANK_ON_BOOT := true
 TW_INPUT_BLACKLIST := "hbtp_vm"
 TW_USE_TOOLBOX := true
 
+# Touch Screen Support
+TW_NO_TOUCHSCREEN := false
+TW_SUPPORT_INPUT_1_2_HAPTICS := false
 
-# USB Configuration
-TW_EXCLUDE_DEFAULT_USB_INIT := true
+# USB/ADB Support
 TW_HAS_USB_STORAGE := true
-TW_INCLUDE_NTFS_3G := true
-TW_MTP_DEVICE := /dev/mtp_usb
-TW_NO_USB_STORAGE := false
-TW_USB_STORAGE := true
-
-# Touchscreen calibration
-TW_CALIBRATE_TOUCH := true
-TW_IGNORE_MAJOR_AXIS_0 := true
-TW_IGNORE_MT_POSITION_0 := true
-
-# Brightness control
-TW_BRIGHTNESS_PATH := /sys/class/backlight/panel0-backlight/brightness
-TW_MAX_BRIGHTNESS := 4095
-TW_DEFAULT_BRIGHTNESS := 200
+TW_ENABLE_FSACRYPT := true
+TW_INCLUDE_CRYPTO := true
+TW_CRYPTO_FS_TYPE := "ext4"
+TW_CRYPTO_USE_SYSTEM_VOLD_KEY := true
