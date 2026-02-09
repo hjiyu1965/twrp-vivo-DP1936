@@ -26,10 +26,7 @@
 #
 
 on init
-    # Try multiple backlight paths for compatibility
     write /sys/class/backlight/panel0-backlight/brightness 200
-    write /sys/class/leds/lcd-backlight/brightness 200
-    write /sys/class/backlight/backlight/brightness 200
     setprop sys.usb.configfs 1
     setprop sys.usb.keep_alive 1
 
