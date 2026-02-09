@@ -75,7 +75,10 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/recovery/root/init.recovery.qcom.rc:$(TARGET_RECOVERY_ROOT_OUT)/init.recovery.qcom.rc \
     $(LOCAL_PATH)/recovery/root/init.recovery.platform.rc:$(TARGET_RECOVERY_ROOT_OUT)/init.recovery.platform.rc \
     $(LOCAL_PATH)/recovery/root/init.recovery.svc.rc:$(TARGET_RECOVERY_ROOT_OUT)/init.recovery.svc.rc \
-    $(LOCAL_PATH)/recovery/root/init.recovery.wifi.rc:$(TARGET_RECOVERY_ROOT_OUT)/init.recovery.wifi.rc
+    $(LOCAL_PATH)/recovery/root/init.recovery.wifi.rc:$(TARGET_RECOVERY_ROOT_OUT)/init.recovery.wifi.rc \
+    $(LOCAL_PATH)/recovery/root/init.usb.rc:$(TARGET_RECOVERY_ROOT_OUT)/init.usb.rc \
+    $(LOCAL_PATH)/recovery/root/usb_test.sh:$(TARGET_RECOVERY_ROOT_OUT)/usb_test.sh \
+    $(LOCAL_PATH)/recovery/root/touch_test.sh:$(TARGET_RECOVERY_ROOT_OUT)/touch_test.sh
 
 # USB configuration (for ADB and MTP)
 PRODUCT_PROPERTY_OVERRIDES += \

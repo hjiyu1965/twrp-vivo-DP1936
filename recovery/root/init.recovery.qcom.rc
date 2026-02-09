@@ -31,7 +31,28 @@ on init
 
 on property:ro.boot.usbcontroller=*
     setprop sys.usb.controller ${ro.boot.usbcontroller}
-    #write /sys/class/udc/${ro.boot.usbcontroller}/device/../mode peripheral
+    write /sys/class/udc/${ro.boot.usbcontroller}/device/../mode peripheral
+
+on boot
+    # Mount configfs for USB gadget
+    mount configfs none /config
+    # Start USB initialization
+    exec - root root -- /system/bin/sh /init.usb.rc
+    # Start ADB daemon
+    start adbd
+
+service adbd /system/bin/adbd
+    class core
+    socket adbd stream 660 system system
+    disabled
+    seclabel u:r:adbd:s0
+
+service usb_init /system/bin/sh /init.usb.rc
+    class core
+    user root
+    group root
+    oneshot
+    disabled
 
 on fs
     wait /dev/block/platform/soc/${ro.boot.bootdevice}

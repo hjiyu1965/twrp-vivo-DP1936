@@ -1,0 +1,86 @@
+#!/system/bin/sh
+# USB Gadget Initialization Script for TWRP
+# This script configures USB gadget for ADB and MTP functionality
+
+LOG_TAG="usb_init"
+log -t $LOG_TAG "Starting USB gadget initialization"
+
+# Wait for USB gadget controller
+while [ ! -d /sys/class/udc ]; do
+    log -t $LOG_TAG "Waiting for UDC..."
+    sleep 1
+done
+
+# Get the first available UDC
+UDC=$(ls /sys/class/udc | head -n 1)
+if [ -z "$UDC" ]; then
+    log -t $LOG_TAG "ERROR: No UDC found!"
+    exit 1
+fi
+
+log -t $LOG_TAG "Found UDC: $UDC"
+
+# Configure configfs for USB gadget
+CONFIGFS="/config/usb_gadget"
+
+# Check if configfs is mounted
+if [ ! -d "$CONFIGFS" ]; then
+    log -t $LOG_TAG "Mounting configfs..."
+    mount -t configfs none /config
+fi
+
+# Create gadget directory
+GADGET_DIR="$CONFIGFS/g1"
+if [ ! -d "$GADGET_DIR" ]; then
+    log -t $LOG_TAG "Creating USB gadget..."
+    mkdir -p "$GADGET_DIR"
+    
+    # Set vendor and product IDs
+    echo 0x18d1 > "$GADGET_DIR/idVendor"
+    echo 0x4ee7 > "$GADGET_DIR/idProduct"
+    
+    # Set device class
+    echo 0x00 > "$GADGET_DIR/bDeviceClass"
+    echo 0x00 > "$GADGET_DIR/bDeviceSubClass"
+    echo 0x00 > "$GADGET_DIR/bDeviceProtocol"
+    
+    # Set English language
+    mkdir -p "$GADGET_DIR/strings/0x409"
+    echo "Vivo" > "$GADGET_DIR/strings/0x409/manufacturer"
+    echo "PD1936" > "$GADGET_DIR/strings/0x409/product"
+    echo "1234" > "$GADGET_DIR/strings/0x409/serialnumber"
+fi
+
+# Create ADB configuration
+CONFIG_DIR="$GADGET_DIR/configs/c.1"
+if [ ! -d "$CONFIG_DIR" ]; then
+    log -t $LOG_TAG "Creating ADB configuration..."
+    mkdir -p "$CONFIG_DIR"
+    
+    # Set configuration attributes
+    mkdir -p "$CONFIG_DIR/strings/0x409"
+    echo "ADB" > "$CONFIG_DIR/strings/0x409/configuration"
+    
+    # Create ADB function
+    ADB_DIR="$GADGET_DIR/functions/ffs.adb"
+    mkdir -p "$ADB_DIR"
+    
+    # Link ADB function to configuration
+    ln -s "$ADB_DIR" "$CONFIG_DIR/ffs.adb"
+    
+    # Mount functionfs for ADB
+    if [ ! -d /dev/usb-ffs/adb ]; then
+        mkdir -p /dev/usb-ffs/adb
+        mount -t functionfs adb /dev/usb-ffs/adb
+    fi
+fi
+
+# Activate the gadget
+log -t $LOG_TAG "Activating USB gadget..."
+echo "$UDC" > "$GADGET_DIR/UDC"
+
+# Set USB properties
+setprop sys.usb.config adb
+setprop sys.usb.state adb
+
+log -t $LOG_TAG "USB gadget initialization completed successfully"
